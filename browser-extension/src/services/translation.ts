@@ -1,26 +1,9 @@
 import type { TranslationRequest, TranslationResult } from '../types';
-
-// Mock translations database
-const mockTranslations: Record<string, string> = {
-  'hello': '你好',
-  'world': '世界',
-  'thank you': '谢谢',
-  'goodbye': '再见',
-  'please': '请',
-  'yes': '是',
-  'no': '否',
-  'help': '帮助',
-  'book': '书',
-  'computer': '计算机',
-  'language': '语言',
-  'translation': '翻译',
-  'assistant': '助手',
-  'reading': '阅读',
-};
+import { llmClient } from './llm';
+import { configService } from './config';
 
 /**
- * Mock translation service
- * Simulates API call with delay
+ * Translation service using LLM API
  */
 export class TranslationService {
   private static instance: TranslationService;
@@ -35,45 +18,44 @@ export class TranslationService {
   }
 
   /**
-   * Translates text (mock implementation)
+   * Translates text using configured LLM API
    */
   async translate(request: TranslationRequest): Promise<TranslationResult> {
-    // Simulate network delay
-    await this.delay(300 + Math.random() * 500);
-
-    const text = request.text.toLowerCase().trim();
-    
-    // Look for exact match
-    let translated = mockTranslations[text];
-    
-    // If no exact match, look for partial match
-    if (!translated) {
-      const partialMatch = Object.keys(mockTranslations).find(key => 
-        text.includes(key) || key.includes(text)
-      );
-      if (partialMatch) {
-        translated = mockTranslations[partialMatch];
+    try {
+      // Check if API is configured
+      const isConfigured = await configService.isConfigured();
+      if (!isConfigured) {
+        return {
+          original: request.text,
+          translated: '[Not configured] Please set up your API key in extension settings',
+          detectedLanguage: 'en',
+        };
       }
-    }
-    
-    // Fallback to mock translation
-    if (!translated) {
-      translated = `[翻译: ${request.text}]`;
-    }
 
-    return {
-      original: request.text,
-      translated,
-      detectedLanguage: 'en',
-    };
-  }
+      // Translate using LLM API
+      const translated = await llmClient.translate(request.text);
 
-  /**
-   * Helper to simulate async delay
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+      return {
+        original: request.text,
+        translated,
+        detectedLanguage: 'en',
+      };
+    } catch (error) {
+      console.error('Translation error:', error);
+      
+      // Return user-friendly error message
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Translation failed. Please check your settings.';
+
+      return {
+        original: request.text,
+        translated: `[Error] ${errorMessage}`,
+        detectedLanguage: 'en',
+      };
+    }
   }
 }
 
 export const translationService = TranslationService.getInstance();
+
