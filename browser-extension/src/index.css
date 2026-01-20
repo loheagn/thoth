@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  
+  * {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply font-sans text-notion-text bg-notion-bg;
+  }
+}
+
+@layer components {
+  .notion-card {
+    @apply bg-notion-bg border border-notion-border rounded-notion shadow-notion;
+  }
+  
+  .notion-button {
+    @apply px-3 py-1.5 rounded-notion text-sm font-medium transition-colors;
+  }
+  
+  .notion-button-primary {
+    @apply notion-button bg-notion-accent text-white hover:bg-notion-accent-hover;
+  }
+  
+  .notion-button-secondary {
+    @apply notion-button bg-notion-bg-secondary text-notion-text hover:bg-notion-border;
+  }
+}
